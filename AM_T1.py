@@ -8,7 +8,7 @@ class MyMLP():
         'If params is None the MLP is initialized with default values.'
         if params == None:
             self.alpha = 0.25
-            self.n_nlayer = np.array([4, 6, 5, 3, 3])  # numero de neuronas por layer
+            self.n_nlayer = np.array([4, 10, 6, 3, 3])  # numero de neuronas por layer
             self.w = []
             self.bias = []
             for i in range(len(self.n_nlayer[1:])):  # ctdad de layer -1
@@ -71,23 +71,23 @@ class MyMLP():
             self.Y = params[1]
             self.n_samples, self.n_features = params[2]
 
-        (ind_train, ind_teste, ind_valid) = self.dataset_Divided(self.X, self.Y, self.n_samples)
+        (ind_train, ind_valid, ind_teste) = self.dataset_Divided(self.X, self.Y, self.n_samples)
         self.X_1 = self.X[ind_train]
-        self.X_2 = self.X[ind_teste]
-        self.X_3 = self.X[ind_valid]
+        self.X_2 = self.X[ind_valid]
+        self.X_3 = self.X[ind_teste]
         self.Y_1 = self.Y[ind_train]
-        self.Y_2 = self.Y[ind_teste]
-        self.Y_3 = self.Y[ind_valid]
+        self.Y_2 = self.Y[ind_valid]
+        self.Y_3 = self.Y[ind_teste]
 
-    def dataset_Divided(self, X, Y, n_samples, pc_train=75, pc_teste=15, pc_valid=5):
+    def dataset_Divided(self, X, Y, n_samples, pc_train=75, pc_valid=15, pc_teste=5):
         indices = list(range(n_samples))
         [np.random.shuffle(indices) for i in range(3)]
         top_train = int(np.ceil(n_samples * pc_train / 100))
-        top_teste = int(np.ceil(n_samples * (pc_train + pc_teste) / 100))
+        top_valid = int(np.ceil(n_samples * (pc_train + pc_valid) / 100))
         ind_train = indices[:top_train]
-        ind_teste = indices[top_train:top_teste]
-        ind_valid = indices[top_teste:]
-        return (ind_train, ind_teste, ind_valid)
+        ind_valid = indices[top_train:top_valid]
+        ind_teste = indices[top_valid:]
+        return (ind_train, ind_valid, ind_teste)
 
     def fnc_act(self, n, func):
         n = np.array(n)
@@ -127,40 +127,41 @@ indX1 = list(range(len(MLP.Y_1)))
 indX2 = list(range(len(MLP.Y_2)))
 indX3 = list(range(len(MLP.Y_3)))
 
-epochs = 50
+epochs = 100
 E_X1 = []
 E_X2 = []
 E_X3 = []
 # Train
 for e in range(epochs):
+    #print('Epoch: ', e)
     # n = np.random.randint(MLP.n_samples)
     # TRAIN
-    np.random.shuffle(indX1)
+    # np.random.shuffle(indX1)
     for i in indX1:
         MLP.propagate(MLP.X_1[i])
         MLP.learn(MLP.X_1[i], arr_Y[MLP.Y_1[i]])
     E_X1.append(np.average(MLP.E))
     MLP.E = []
-    # TESTE
-    np.random.shuffle(indX2)
+    # VALIDATION
+    # np.random.shuffle(indX2)
     for i in indX2:
         MLP.propagate(MLP.X_1[i])
         MLP.learn(MLP.X_2[i], arr_Y[MLP.Y_2[i]])
     E_X2.append(np.average(MLP.E))
     MLP.E = []
-    # VALIDATION
-    np.random.shuffle(indX3)
+    # TESTE
+    # np.random.shuffle(indX3)
     for i in indX3:
         MLP.propagate(MLP.X_3[i])
         MLP.carga_Error(abs(arr_Y[MLP.Y_3[i]] - MLP.out_layers[-1]))
-        print(MLP.X_3[i], " |", arr_Y[MLP.Y_3[i]], "  | ", MLP.out_layers[-1], " | ", MLP.dE[-1])
+        #print(MLP.X_3[i], " |", arr_Y[MLP.Y_3[i]], "  | ", MLP.out_layers[-1], " | ", MLP.dE[-1], " | ", MLP.E[-1])
     E_X3.append(np.average(MLP.E))
     MLP.E = []
 
-
 plt.plot(range(len(E_X1)), E_X1)
-#plt.plot(range(len(E_X2)), E_X2)
-#plt.plot(range(len(E_X3)), E_X3)
+plt.plot(range(len(E_X2)), E_X2)
+plt.plot(range(len(E_X3)), E_X3)
+plt.legend(['training', 'validation', 'teste'])
 plt.ylabel('Loss')
 plt.xlabel('Epochs')
 plt.show()
